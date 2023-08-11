@@ -42,16 +42,16 @@ def train(model, train_loader, validate_loader, epochs, device, optimiser, loss_
             # update model weights using gradient and optimisation method
             optimiser.step()
 
-            # model.eval() # prep model for evaluation
-            # for batch, d in enumerate(validate_loader):
-            #     # forward pass: compute predicted outputs by passing inputs to the model
-            #     output = model(d)
-            #     # calculate the loss
-            #     loss = loss_function(output, d.y.to(device).float())
-            #     # record validation loss
-            #     validate_loss.append(loss.item())
+            model.eval() # prep model for evaluation
+            for batch, d in enumerate(validate_loader):
+                # forward pass: compute predicted outputs by passing inputs to the model
+                output = model(d)
+                # calculate the loss
+                loss = loss_function(output, d.y.to(device).float())
+                # record validation loss
+                validate_loss.append(loss.item())
 
-            #check_validate_loss = statistics.mean(validate_loss)
+            check_validate_loss = statistics.mean(validate_loss)
             check_train_loss = statistics.mean(train_loss)
 
             G_train, P_train = predict(model, device, train_loader)
@@ -60,7 +60,7 @@ def train(model, train_loader, validate_loader, epochs, device, optimiser, loss_
             som_match.append(probabilities)
             top_pred.append(top_prediction)
             loss_list.append(check_train_loss)
-            #loss_validate.append(check_validate_loss)
+            loss_validate.append(check_validate_loss)
 
             # early_stopping(check_train_loss, check_validate_loss)
         
