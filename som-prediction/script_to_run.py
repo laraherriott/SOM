@@ -3,7 +3,13 @@ import random
 import os
 import sys
 import json
+
+from rdkit import Chem
+from rdkit.Chem import PandasTools
+
 import torch
+import torch.nn as nn
+import torch_geometric.nn as gnn
 
 import sklearn.preprocessing as sklearn_pre
 
