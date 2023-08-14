@@ -22,7 +22,7 @@ class GCN(nn.Module):
     def __init__(self, trial, num_node_features):
         super().__init__()
         n_layers = trial.suggest_int("n_layers", 1, 5)
-        width = trial.suggest_int("width", 128, 512)
+        width = int(trial.suggest_categorical("width", ['128', '256', '512']))
         drop_prop = trial.suggest_float("drop_prop", 0.2, 0.5)
 
         relu = nn.ReLU()
