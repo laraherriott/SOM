@@ -45,8 +45,8 @@ class GCN(nn.Module):
             if i != n_layers - 2:
                 layers.append(nn.ReLU())
                 layers.append(nn.Dropout(drop_prop))
-        layers.append((gnn.GCNConv(width, int(width/2)), 'x, edge_index -> x'))
-        layers.append((gnn.GCNConv(int(width/2), int(3*(width/4))), 'x, edge_index -> x'))
+        layers.append((gnn.GCNConv(width, int(3*width/4)), 'x, edge_index -> x'))
+        layers.append((gnn.GCNConv(int(3*(width/4)), int(width/2)), 'x, edge_index -> x'))
         layers.append((gnn.GCNConv(int(width/2), 1), 'x, edge_index -> x'))
 
         self.layers = gnn.Sequential('x, edge_index', layers)
@@ -60,6 +60,7 @@ def objective(trial):
     # Create a convolutional neural network.
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = GCN(trial, num_node_features).to(device)
+    print(model)
     lr = trial.suggest_float("lr", 1e-5, 1e-1, log=True)
     optimiser = torch.optim.Adam(model.parameters(), lr=lr)
     loss_function = nn.BCEWithLogitsLoss(pos_weight = torch.tensor(max_length-1))
@@ -91,6 +92,11 @@ def objective(trial):
         model.eval() # prep model for evaluation
         with torch.no_grad():
             for batch, d in enumerate(validate_loader):
+                d = d.to(device)
+                flat_list = []
+                for row in d.y:
+                    flat_list += row
+                d.y = torch.tensor(flat_list).view(-1, 1)
                 # forward pass: compute predicted outputs by passing inputs to the model
                 output = model(d)
                 # calculate the loss
