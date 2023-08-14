@@ -31,13 +31,13 @@ class GCN(nn.Module):
         # in channels is number of features
         # out channel is number of classes to predict, here 1 since just predicting atom SOM
         layers = []
-        layers.append((gnn.GCNConv(num_node_features, width/2), 'x, edge_index -> x'))
+        layers.append((gnn.GCNConv(num_node_features, int(width/2)), 'x, edge_index -> x'))
         layers.append(relu())
         layers.append(drop())
-        layers.append((gnn.GCNCcnv(width/2, 3*(width/4)), 'x, edge_index -> x'))
+        layers.append((gnn.GCNCcnv(int(width/2), int(3*(width/4))), 'x, edge_index -> x'))
         layers.append(relu())
         layers.append(drop())
-        layers.append((gnn.GCNConv(3*(width/4), width), 'x, edge_index -> x'))
+        layers.append((gnn.GCNConv(int(3*(width/4)), width), 'x, edge_index -> x'))
         layers.append(relu())
         layers.append(drop())
         for i in range(n_layers):
@@ -45,9 +45,9 @@ class GCN(nn.Module):
             if i != n_layers - 2:
                 layers.append(relu())
                 layers.append(drop())
-        layers.append((gnn.GCNConv(width, width/2), 'x, edge_index -> x'))
-        layers.append((gnn.GCNConv(width/2, 3*(width/4)), 'x, edge_index -> x'))
-        layers.append((gnn.GCNConv(width/2, 1), 'x, edge_index -> x'))
+        layers.append((gnn.GCNConv(width, int(width/2)), 'x, edge_index -> x'))
+        layers.append((gnn.GCNConv(int(width/2), int(3*(width/4))), 'x, edge_index -> x'))
+        layers.append((gnn.GCNConv(int(width/2), 1), 'x, edge_index -> x'))
 
         self.layers = gnn.Sequential('x, edge_index', layers)
 
