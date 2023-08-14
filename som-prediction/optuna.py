@@ -130,7 +130,7 @@ train_loader, validate_loader, test_loader, num_node_features, max_length = data
 epochs = config['n_epochs']
 
 study = optuna.create_study(direction="minimize") # will use median pruner by default
-study.optimize(objective, n_trials=100, timeout=600)
+study.optimize(objective, n_trials=100)
 
 print("Number of finished trials: ", len(study.trials))
 
@@ -143,3 +143,5 @@ print("  Params: ")
 for key, value in trial.params.items():
     print("    {}: {}".format(key, value))
 
+results = pd.DataFrame.from_dict(trial.params)
+results.to_csv('optuna_output.csv')
