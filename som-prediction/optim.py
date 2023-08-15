@@ -41,9 +41,8 @@ class GCN(nn.Module):
         layers.append(nn.Dropout(drop_prop))
         for i in range(n_layers):
             layers.append((gnn.GCNConv(width, width), 'x, edge_index -> x'))
-            if i != n_layers - 2:
-                layers.append(nn.ReLU())
-                layers.append(nn.Dropout(drop_prop))
+            layers.append(nn.ReLU())
+            layers.append(nn.Dropout(drop_prop))
         layers.append((gnn.GCNConv(width, int(3*width/4)), 'x, edge_index -> x'))
         layers.append(nn.ReLU())
         layers.append(nn.Dropout(drop_prop))
