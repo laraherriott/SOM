@@ -149,5 +149,5 @@ print("  Params: ")
 for key, value in trial.params.items():
     print("    {}: {}".format(key, value))
 
-results = pd.DataFrame.from_dict(trial.params)
+results = pd.DataFrame.from_dict(trial.params, index=[0])
 results.to_csv('optuna_output.csv')
