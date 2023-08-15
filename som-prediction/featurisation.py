@@ -158,7 +158,7 @@ class Featurisation:
 
             node_feature = self.combine_atom_features(mol, node_feature)
             if node_feature is None:
-                break
+                continue
             else:
                 node_feature = torch.tensor(node_feature, dtype = torch.float)
             
