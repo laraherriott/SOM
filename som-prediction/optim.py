@@ -67,7 +67,7 @@ def objective(trial):
     lr = trial.suggest_float("lr", 1e-5, 1e-1, log=True)
     optimiser = torch.optim.Adam(model.parameters(), lr=lr)
     pos_weighting = trial.suggest_int('pos_weighting', int((max_length-1)/2), int(max_length-1))
-    loss_function = nn.BCEWithLogitsLoss(pos_weight = torch.tensor(max_length-1))
+    loss_function = nn.BCEWithLogitsLoss(pos_weight = pos_weighting)
 
 
     for epoch in range(epochs):
