@@ -41,12 +41,13 @@ class PreProcessing:
         features = Featurisation(self.mols, self.soms, self.max_atoms, self.max_bonds)
 
         graph_object, num_node_features, max_length = features.create_pytorch_geometric_graph_data_list_from_smiles_and_labels()
-
+        print(num_node_features, max_length)
         return graph_object, num_node_features, max_length
     
     def test_train_split(self):
 
         data, num_features, max_length = self.featurise()
+        print(len(data))
         random.shuffle(data)
 
         train_length = math.ceil(self.training_prop*len(data))

@@ -87,14 +87,16 @@ class Featurisation:
         # list with element for each atom
         # then that element is itself a list of tuples for each feature in the format (feature, value)
         # all numeric except hybridisation which needs one hot encoding
-
-        for atom in mol.GetAtoms():
-            generic_list = self.get_atom_features(atom)
-            jazzy_list = [x[1] for x in atomic_features[atom.GetIdx()]]
-            hybridisation = self.one_hot_encoding(jazzy_list[4], ["s", "sp", "sp2", "sp3", "sp3d", "sp3d2", "other"])
-            jazzy_list = jazzy_list[0:4] + hybridisation + jazzy_list[5:]
-            matrix[atom.GetIdx(), :] = generic_list + jazzy_list
-        return matrix
+        if atomic_features is None:
+            return None
+        else:
+            for atom in mol.GetAtoms():
+                generic_list = self.get_atom_features(atom)
+                jazzy_list = [x[1] for x in atomic_features[atom.GetIdx()]]
+                hybridisation = self.one_hot_encoding(jazzy_list[4], ["s", "sp", "sp2", "sp3", "sp3d", "sp3d2", "other"])
+                jazzy_list = jazzy_list[0:4] + hybridisation + jazzy_list[5:]
+                matrix[atom.GetIdx(), :] = generic_list + jazzy_list
+            return matrix
 
     def get_bond_features(self, bond, 
                           use_stereochemistry = True):
@@ -155,27 +157,29 @@ class Featurisation:
             node_feature = np.zeros((self.max_atoms, num_node_features))
 
             node_feature = self.combine_atom_features(mol, node_feature)
-        
-            node_feature = torch.tensor(node_feature, dtype = torch.float)
+            if node_feature is None:
+                break
+            else:
+                node_feature = torch.tensor(node_feature, dtype = torch.float)
             
-            # construct edge index array E of shape (2, n_edges)
-            (rows, cols) = np.nonzero(GetAdjacencyMatrix(mol))
-            torch_rows = torch.from_numpy(rows.astype(np.int64)).to(torch.long)
-            torch_cols = torch.from_numpy(cols.astype(np.int64)).to(torch.long)
-            edge = torch.stack([torch_rows, torch_cols], dim = 0)
+                # construct edge index array E of shape (2, n_edges)
+                (rows, cols) = np.nonzero(GetAdjacencyMatrix(mol))
+                torch_rows = torch.from_numpy(rows.astype(np.int64)).to(torch.long)
+                torch_cols = torch.from_numpy(cols.astype(np.int64)).to(torch.long)
+                edge = torch.stack([torch_rows, torch_cols], dim = 0)
             
-            # construct edge feature array EF of shape (n_edges, n_edge_features)
-            edge_features = np.zeros((2*self.max_bonds, num_edge_features))
+                # construct edge feature array EF of shape (n_edges, n_edge_features)
+                edge_features = np.zeros((2*self.max_bonds, num_edge_features))
             
-            for (k, (i,j)) in enumerate(zip(rows, cols)):
-                edge_features[k] = self.get_bond_features(mol.GetBondBetweenAtoms(int(i),int(j)))
+                for (k, (i,j)) in enumerate(zip(rows, cols)):
+                    edge_features[k] = self.get_bond_features(mol.GetBondBetweenAtoms(int(i),int(j)))
             
-            edge_features = torch.tensor(edge_features, dtype = torch.float)
+                edge_features = torch.tensor(edge_features, dtype = torch.float)
             
-            # construct label tensor
-            som_tensor = torch.tensor(np.array([som]))
+                # construct label tensor
+                som_tensor = torch.tensor(np.array([som]))
             
-            # construct Pytorch Geometric data object and append to data list
-            data_list.append(Data(x = node_feature, edge_index = edge, edge_attr = edge_features, y = som_tensor))
+                # construct Pytorch Geometric data object and append to data list
+                data_list.append(Data(x = node_feature, edge_index = edge, edge_attr = edge_features, y = som_tensor))
         return data_list, num_node_features, self.max_atoms
 
