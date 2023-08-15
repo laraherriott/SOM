@@ -30,26 +30,30 @@ class GAT(nn.Module):
         # in channels is number of features
         # out channel is number of classes to predict, here 1 since just predicting atom SOM
         layers = []
-        layers.append((gnn.GATv2Conv(num_node_features, int(width/2), heads = head, dropout = gat_drop), 'x, edge_index -> x'))
+        layers.append((gnn.GCNConv(num_node_features, int(width/2)), 'x, edge_index -> x'))
         layers.append(nn.ReLU())
-        layers.append((gnn.GATv2Conv(int(width/2), int(3*(width/4)), heads = head, dropout = gat_drop), 'x, edge_index -> x'))
+        layers.append((gnn.GCNConv(int(width/2), int(3*(width/4))), 'x, edge_index -> x'))
         layers.append(nn.ReLU())
         layers.append(nn.Dropout(drop_prop))
-        layers.append((gnn.GATv2Conv(int(3*(width/4)), width, heads = head, dropout = gat_drop), 'x, edge_index -> x'))
+        layers.append((gnn.GCNConv(int(3*(width/4)), width), 'x, edge_index -> x'))
         layers.append(nn.ReLU())
         layers.append(nn.Dropout(drop_prop))
         for i in range(n_layers):
-            layers.append((gnn.GATv2Conv(width, width, heads = head, dropout = gat_drop), 'x, edge_index -> x'))
-            if i != n_layers - 2:
-                layers.append(nn.ReLU())
-                layers.append(nn.Dropout(drop_prop))
-        layers.append((gnn.GATv2Conv(width, int(3*width/4), heads = head, dropout = gat_drop), 'x, edge_index -> x'))
+            if i == 0:
+                layers.append((gnn.GATv2Conv(width, width, heads = head, dropout = gat_drop), 'x, edge_index -> x'))
+            elif i == n_layers - 1:
+                layers.append((gnn.GATv2Conv(width*(head**(1+i)), width, heads = 1, dropout = gat_drop), 'x, edge_index -> x'))
+            else:
+                layers.append((gnn.GATv2Conv(width*(head**(1+i)), width*(head**(1+i)), heads = head, dropout = gat_drop), 'x, edge_index -> x'))
+            layers.append(nn.ReLU())
+            layers.append(nn.Dropout(drop_prop))
+        layers.append((gnn.GCNConv(width, int(3*width/4)), 'x, edge_index -> x'))
         layers.append(nn.ReLU())
         layers.append(nn.Dropout(drop_prop))
-        layers.append((gnn.GATv2Conv(int(3*(width/4)), int(width/2), heads = head, dropout = gat_drop), 'x, edge_index -> x'))
+        layers.append((gnn.GCNConv(int(3*(width/4)), int(width/2)), 'x, edge_index -> x'))
         layers.append(nn.ReLU())
         layers.append(nn.Dropout(drop_prop))
-        layers.append((gnn.GATv2Conv(int(width/2), 1, heads = head, dropout = gat_drop), 'x, edge_index -> x'))
+        layers.append((gnn.GCNConv(int(width/2), 1), 'x, edge_index -> x'))
 
         self.layers = gnn.Sequential('x, edge_index', layers)
 
