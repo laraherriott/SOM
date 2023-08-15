@@ -30,7 +30,7 @@ class GAT(nn.Module):
         # in channels is number of features
         # out channel is number of classes to predict, here 1 since just predicting atom SOM
         layers = []
-        layers.append((gnn.GCNConv(num_node_features, width)), 'x, edge_index -> x')
+        layers.append((gnn.GCNConv(num_node_features, width), 'x, edge_index -> x'))
         layers.append(nn.ReLU())
         layers.append(nn.Dropout(drop_prop))
         for i in range(n_layers):
@@ -42,7 +42,7 @@ class GAT(nn.Module):
                 layers.append((gnn.GATv2Conv(width*(head**(1+i)), width*(head**(1+i)), heads = head, dropout = gat_drop), 'x, edge_index -> x'))
             layers.append(nn.ReLU())
             layers.append(nn.Dropout(drop_prop))
-        layers.append((gnn.GCNConv(width, 1)), 'x, edge_index -> x')
+        layers.append((gnn.GCNConv(width, 1), 'x, edge_index -> x'))
 
         self.layers = gnn.Sequential('x, edge_index', layers)
 
