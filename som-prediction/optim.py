@@ -33,7 +33,6 @@ class GCN(nn.Module):
         layers = []
         layers.append((gnn.GCNConv(num_node_features, int(width/2)), 'x, edge_index -> x'))
         layers.append(nn.ReLU())
-        layers.append(nn.Dropout(drop_prop))
         layers.append((gnn.GCNConv(int(width/2), int(3*(width/4))), 'x, edge_index -> x'))
         layers.append(nn.ReLU())
         layers.append(nn.Dropout(drop_prop))
@@ -46,7 +45,11 @@ class GCN(nn.Module):
                 layers.append(nn.ReLU())
                 layers.append(nn.Dropout(drop_prop))
         layers.append((gnn.GCNConv(width, int(3*width/4)), 'x, edge_index -> x'))
+        layers.append(nn.ReLU())
+        layers.append(nn.Dropout(drop_prop))
         layers.append((gnn.GCNConv(int(3*(width/4)), int(width/2)), 'x, edge_index -> x'))
+        layers.append(nn.ReLU())
+        layers.append(nn.Dropout(drop_prop))
         layers.append((gnn.GCNConv(int(width/2), 1), 'x, edge_index -> x'))
 
         self.layers = gnn.Sequential('x, edge_index', layers)
@@ -63,6 +66,7 @@ def objective(trial):
     print(model)
     lr = trial.suggest_float("lr", 1e-5, 1e-1, log=True)
     optimiser = torch.optim.Adam(model.parameters(), lr=lr)
+    pos_weighting = trial.suggest_int('pos_weighting', int((max_length-1)/2), int(max_length-1))
     loss_function = nn.BCEWithLogitsLoss(pos_weight = torch.tensor(max_length-1))
 
 
@@ -149,5 +153,5 @@ print("  Params: ")
 for key, value in trial.params.items():
     print("    {}: {}".format(key, value))
 
-results = pd.DataFrame.from_dict(trial.params)
+results = pd.DataFrame(trial.params, index=[0])
 results.to_csv('optuna_output.csv')
