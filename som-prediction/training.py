@@ -44,6 +44,11 @@ def train(model, train_loader, validate_loader, epochs, device, optimiser, loss_
 
         model.eval() # prep model for evaluation
         for batch, d in enumerate(validate_loader):
+            d = d.to(device)
+            flat_list = []
+            for row in d.y:
+                flat_list += row
+            d.y = torch.tensor(flat_list).view(-1, 1)
             # forward pass: compute predicted outputs by passing inputs to the model
             output = model(d)
             # calculate the loss
@@ -56,8 +61,8 @@ def train(model, train_loader, validate_loader, epochs, device, optimiser, loss_
 
         G_train, P_train = predict(model, device, train_loader)
 
-        probabilities, top_prediction = soms_match_fn(G_train, P_train, max_length)
-        som_match.append(probabilities)
+        actual_som, top_prediction = soms_match_fn(G_train, P_train, max_length)
+        som_match.append(actual_som)
         top_pred.append(top_prediction)
         loss_list.append(check_train_loss)
         loss_validate.append(check_validate_loss)
@@ -115,7 +120,7 @@ def predict(model, device, loader, mc_dropout=False, verbose=True):
 
 def soms_match_fn(G, P, max_length):
     real = list()
-    predictions = list()
+    #predictions = list()
     max_atoms = list()
     for _ in range(len(G)):
         new_G = G[_].tolist()
@@ -135,14 +140,14 @@ def soms_match_fn(G, P, max_length):
             per_mol_P.append(new_P[i:i+max_length])
 
         max_atom = list()
-        batch_predictions = list()
+        #batch_predictions = list()
         for mol_P in per_mol_P:
             max_atom.append(mol_P.index(max(mol_P))+1)
-            batch_predictions.append(mol_P)
+            #batch_predictions.append(mol_P)
         
-        predictions.append(batch_predictions)
+        #predictions.append(batch_predictions)
         max_atoms.append(max_atom)
 
-    return (real, predictions), max_atoms
+    return real, max_atoms
 
 # F score? because binary classification
