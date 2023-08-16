@@ -89,9 +89,9 @@ class Featurisation:
         # list with element for each atom
         # then that element is itself a list of tuples for each feature in the format (feature, value)
         # all numeric except hybridisation which needs one hot encoding
+        target = list()
         if atomic_features is None:
             return None
-        target = list()
         else:
             for atom in mol.GetAtoms():
                 generic_list, label = self.get_atom_features(atom)
