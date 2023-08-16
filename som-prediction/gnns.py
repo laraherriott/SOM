@@ -31,6 +31,7 @@ class GCN(nn.Module):
         layers.append(nn.ReLU())
         layers.append(nn.Dropout(drop_prop))
         layers.append((gnn.GCNConv(int(width/2), 1), 'x, edge_index -> x'))
+        layers.append(nn.Softmax())
 
         self.layers = gnn.Sequential('x, edge_index', layers)
 

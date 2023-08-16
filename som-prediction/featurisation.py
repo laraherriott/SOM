@@ -51,7 +51,9 @@ class Featurisation:
         # define list of permitted atoms
         
         permitted_list_of_atoms =  ['C','N','O','S','F','Si','P','Cl','Br','Mg','Na','Ca','Fe','As','Al','I', 'B','V','K','Tl','Yb','Sb','Sn','Ag','Pd','Co','Se','Ti','Zn', 'Li','Ge','Cu','Au','Ni','Cd','In','Mn','Zr','Cr','Pt','Hg','Pb','Unknown']
-        
+        indices = list(range(len(permitted_list_of_atoms)))
+        encoded = dict(list(indices, permitted_list_of_atoms))
+
         if hydrogens_implicit == False:
             permitted_list_of_atoms = ['H'] + permitted_list_of_atoms
         
@@ -79,7 +81,7 @@ class Featurisation:
         if hydrogens_implicit == True:
             n_hydrogens_enc = self.one_hot_encoding(int(atom.GetTotalNumHs()), [0, 1, 2, 3, 4, "MoreThanFour"])
             atom_feature_vector += n_hydrogens_enc
-        return atom_feature_vector
+        return atom_feature_vector, encoded.values().index(str(atom.GetSymbol()))
 
     def combine_atom_features(self, mol, matrix):
         # get jazzy features
@@ -89,14 +91,16 @@ class Featurisation:
         # all numeric except hybridisation which needs one hot encoding
         if atomic_features is None:
             return None
+        target = list()
         else:
             for atom in mol.GetAtoms():
-                generic_list = self.get_atom_features(atom)
+                generic_list, label = self.get_atom_features(atom)
+                target.append(label)
                 jazzy_list = [x[1] for x in atomic_features[atom.GetIdx()]]
                 hybridisation = self.one_hot_encoding(jazzy_list[4], ["s", "sp", "sp2", "sp3", "sp3d", "sp3d2", "other"])
                 jazzy_list = jazzy_list[0:4] + hybridisation + jazzy_list[5:]
                 matrix[atom.GetIdx(), :] = generic_list + jazzy_list
-            return matrix
+            return matrix, target
 
     def get_bond_features(self, bond, 
                           use_stereochemistry = True):
@@ -156,7 +160,7 @@ class Featurisation:
             # construct node feature matrix X of shape (n_nodes, n_node_features)
             node_feature = np.zeros((self.max_atoms, num_node_features))
 
-            node_feature = self.combine_atom_features(mol, node_feature)
+            node_feature, label = self.combine_atom_features(mol, node_feature)
             if node_feature is None:
                 continue
             else:
@@ -180,6 +184,6 @@ class Featurisation:
                 som_tensor = torch.tensor(np.array([som]))
             
                 # construct Pytorch Geometric data object and append to data list
-                data_list.append(Data(x = node_feature, edge_index = edge, edge_attr = edge_features, y = som_tensor))
+                data_list.append(Data(x = node_feature, edge_index = edge, edge_attr = edge_features, y = label))
         return data_list, num_node_features, self.max_atoms
 

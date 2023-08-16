@@ -59,11 +59,11 @@ def train(model, train_loader, validate_loader, epochs, device, optimiser, loss_
         check_validate_loss = statistics.mean(validate_loss)
         check_train_loss = statistics.mean(train_loss)
 
-        G_train, P_train = predict(model, device, train_loader)
+        accuracy = predict(model, device, train_loader)
 
-        actual_som, top_prediction = soms_match_fn(G_train, P_train, max_length)
-        som_match.append(actual_som)
-        top_pred.append(top_prediction)
+        #actual_som, top_prediction = soms_match_fn(G_train, P_train, max_length)
+        #som_match.append(actual_som)
+        top_pred.append(accuracy)
         loss_list.append(check_train_loss)
         loss_validate.append(check_validate_loss)
 
@@ -78,7 +78,7 @@ def train(model, train_loader, validate_loader, epochs, device, optimiser, loss_
 
         print('Epoch {} completed'.format(epoch))
     
-    return loss_list, loss_validate, som_match, top_pred
+    return loss_list, loss_validate, top_pred
 
 def predict(model, device, loader, mc_dropout=False, verbose=True):
     """
@@ -97,22 +97,22 @@ def predict(model, device, loader, mc_dropout=False, verbose=True):
     y_scaler: sklearn.preprocessing.StandardScaler
         standard scaler transforming the target variable
     """
-    sigmoid = nn.Sigmoid()
     model.eval()
     if mc_dropout:
         model.dropout_layer.train()
     total_preds = list()
     total_labels = list()
+    acc = list()
     if verbose:
         print('Make prediction for {} samples...'.format(len(loader.dataset)))
     with torch.no_grad():
         for data in loader:
             data = data.to(device)
             output = model(data)
-            total_preds.append(sigmoid(output))
-            total_labels.append(data.y.view(-1, 1))
+            correct = output == data.y.view(-1, 1)
+            acc.append(int(correct.sum()) / int(len(data)))
 
-    return total_labels, total_preds
+    return acc
 
 
 # def early_stopping(train_loss, valid_loss):
