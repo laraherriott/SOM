@@ -150,4 +150,36 @@ def soms_match_fn(G, P, max_length):
 
     return real, max_atoms
 
+def soms_match_fn_test(G, P, max_length):
+    real = list()
+    predictions = list()
+    max_atoms = list()
+    for _ in range(len(G)):
+        new_G = G[_].tolist()
+        per_mol = list()
+        for i in range(0, len(new_G), max_length):
+            per_mol.append(new_G[i:i+max_length])
+        
+        batch_real = list()
+        for mol in per_mol:
+            batch_real.append(mol.index([1.0])+1)
+        
+        real.append(batch_real)
+
+        new_P = P[_].tolist()
+        per_mol_P = list()
+        for i in range(0, len(new_P), max_length):
+            per_mol_P.append(new_P[i:i+max_length])
+
+        max_atom = list()
+        batch_predictions = list()
+        for mol_P in per_mol_P:
+            max_atom.append(mol_P.index(max(mol_P))+1)
+            batch_predictions.append(mol_P)
+        
+        predictions.append(batch_predictions)
+        max_atoms.append(max_atom)
+
+    return real, predictions, max_atoms
+
 # F score? because binary classification

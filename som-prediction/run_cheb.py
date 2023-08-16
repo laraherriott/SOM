@@ -15,7 +15,7 @@ import sklearn.preprocessing as sklearn_pre
 
 from preprocessing import PreProcessing
 from gnns import ChebConv
-from training import train, predict, soms_match_fn
+from training import train, predict, soms_match_fn_test
 
 # set seed
 random.seed(1)
@@ -64,12 +64,12 @@ torch.save(model.state_dict(), os.path.join(model_output_dir, model_file_name))
 # make predictions for test dataset
 G_test, P_test = predict(model, device, test_loader)
 
-actual_som_test, top_pred_test = soms_match_fn(G_test, P_test, max_length)
+actual_som_test, predictions, top_pred_test = soms_match_fn_test(G_test, P_test, max_length)
 
 df_training_history = pd.DataFrame({"loss": loss_list, "validation_loss": loss_validate, "som_actual": som_match, "top_predictions": top_pred})
 df_training_history.to_csv(os.path.join(os.path.join("../output","training_logs"), model_file_name + ".csv"))
 
-test_results = pd.DataFrame({"actual_soms": [actual_som_test], "predicted_primary_soms": [top_pred_test]})
+test_results = pd.DataFrame({"actual_soms": actual_som_test, "predicted_primary_soms": top_pred_test, "all_probabilities": predictions})
 test_results.to_csv(os.path.join(os.path.join("../output"), model_file_name + ".csv"))
 
 #print("Top 1 acuracy: ", number_correct/len(som_actual_test[0][0]))
