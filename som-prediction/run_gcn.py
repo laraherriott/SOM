@@ -58,7 +58,7 @@ if len(loss_validate) == 0:
     loss_validate = [0]*len(loss_list)
 
 # save trained model
-model_output_dir = '../models'
+model_output_dir = 'models'
 model_file_name = 'GCN_1'
 torch.save(model.state_dict(), os.path.join(model_output_dir, model_file_name))
 
@@ -68,10 +68,10 @@ G_test, P_test = predict(model, device, test_loader)
 actual_som_test, predictions, top_pred_test = soms_match_fn_test(G_test, P_test, max_length)
 
 df_training_history = pd.DataFrame({"loss": loss_list, "validation_loss": loss_validate, "som_actual": som_match, "top_predictions": top_pred})
-df_training_history.to_csv(os.path.join(os.path.join("../output","training_logs"), model_file_name + ".csv"))
+df_training_history.to_csv(os.path.join(os.path.join("output","training_logs"), model_file_name + ".csv"))
 
 test_results = pd.DataFrame({"actual_soms": actual_som_test, "predicted_primary_soms": top_pred_test, "all_probabilities": predictions})
-test_results.to_csv(os.path.join(os.path.join("../output"), model_file_name + ".csv"))
+test_results.to_csv(os.path.join(os.path.join("output"), model_file_name + ".csv"))
 
 #print("Top 1 acuracy: ", number_correct/len(som_actual_test[0][0]))
 
