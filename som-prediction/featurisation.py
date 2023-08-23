@@ -177,7 +177,7 @@ class Featurisation:
                 edge_features = torch.tensor(edge_features, dtype = torch.float)
             
                 # construct label tensor
-                som_tensor = torch.tensor(np.array([som]))
+                som_tensor = torch.tensor(np.array(som))
             
                 # construct Pytorch Geometric data object and append to data list
                 data_list.append(Data(x = node_feature, edge_index = edge, edge_attr = edge_features, y = som_tensor))
