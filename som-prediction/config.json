@@ -1,5 +1,7 @@
 {
     "data": "../Data/3A4_AZPass.sdf",
+    "model": "../models",
+    "output": "../output",
     "batch_size": 32,
     "split": [0.7, 0.1, 0,1],
     "n_epochs": 50
