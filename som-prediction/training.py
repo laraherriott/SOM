@@ -25,10 +25,10 @@ def train(model, train_loader, validate_loader, epochs, device, optimiser, loss_
         # loop over minibatches for training
         for batch, data in enumerate(train_loader):
             data = data.to(device)
-            flat_list = []
-            for row in data.y:
-                flat_list += row
-            data.y = torch.tensor(flat_list).view(-1, 1)
+            # flat_list = []
+            # for row in data.y:
+            #     flat_list += row
+            # data.y = torch.tensor(flat_list).view(-1, 1)
             # set past gradient to zero
             optimiser.zero_grad()
             # compute current value of loss function via forward pass
@@ -45,10 +45,10 @@ def train(model, train_loader, validate_loader, epochs, device, optimiser, loss_
         model.eval() # prep model for evaluation
         for batch, d in enumerate(validate_loader):
             d = d.to(device)
-            flat_list = []
-            for row in d.y:
-                flat_list += row
-            d.y = torch.tensor(flat_list).view(-1, 1)
+            # flat_list = []
+            # for row in d.y:
+            #     flat_list += row
+            # d.y = torch.tensor(flat_list).view(-1, 1)
             # forward pass: compute predicted outputs by passing inputs to the model
             output = model(d)
             # calculate the loss

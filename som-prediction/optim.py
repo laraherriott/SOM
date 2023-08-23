@@ -31,25 +31,27 @@ class GCN(nn.Module):
         # in channels is number of features
         # out channel is number of classes to predict, here 1 since just predicting atom SOM
         layers = []
-        layers.append((gnn.GCNConv(num_node_features, int(width/2)), 'x, edge_index -> x'))
-        layers.append(nn.ReLU())
-        layers.append((gnn.GCNConv(int(width/2), int(3*(width/4))), 'x, edge_index -> x'))
+        layers.append((gnn.GCNConv(num_node_features, width), 'x, edge_index -> x'))
         layers.append(nn.ReLU())
         layers.append(nn.Dropout(drop_prop))
-        layers.append((gnn.GCNConv(int(3*(width/4)), width), 'x, edge_index -> x'))
-        layers.append(nn.ReLU())
-        layers.append(nn.Dropout(drop_prop))
+        # layers.append((gnn.GCNConv(int(width/2), int(3*(width/4))), 'x, edge_index -> x'))
+        # layers.append(nn.ReLU())
+        # layers.append(nn.Dropout(drop_prop))
+        # layers.append((gnn.GCNConv(int(3*(width/4)), width), 'x, edge_index -> x'))
+        # layers.append(nn.ReLU())
+        # layers.append(nn.Dropout(drop_prop))
         for i in range(n_layers):
             layers.append((gnn.GCNConv(width, width), 'x, edge_index -> x'))
             layers.append(nn.ReLU())
             layers.append(nn.Dropout(drop_prop))
-        layers.append((gnn.GCNConv(width, int(3*width/4)), 'x, edge_index -> x'))
-        layers.append(nn.ReLU())
-        layers.append(nn.Dropout(drop_prop))
-        layers.append((gnn.GCNConv(int(3*(width/4)), int(width/2)), 'x, edge_index -> x'))
-        layers.append(nn.ReLU())
-        layers.append(nn.Dropout(drop_prop))
-        layers.append((gnn.GCNConv(int(width/2), 1), 'x, edge_index -> x'))
+        # layers.append((gnn.GCNConv(width, int(3*width/4)), 'x, edge_index -> x'))
+        # layers.append(nn.ReLU())
+        # layers.append(nn.Dropout(drop_prop))
+        # layers.append((gnn.GCNConv(int(3*(width/4)), int(width/2)), 'x, edge_index -> x'))
+        # layers.append(nn.ReLU())
+        # layers.append(nn.Dropout(drop_prop))
+        #layers.append((gnn.GCNConv(int(width/2), 1), 'x, edge_index -> x'))
+        layers.append((gnn.Linear(width, 1), 'x, edge_index -> x'))
 
         self.layers = gnn.Sequential('x, edge_index', layers)
 
@@ -75,10 +77,10 @@ def objective(trial):
         # loop over minibatches for training
         for batch, data in enumerate(train_loader):
             data = data.to(device)
-            flat_list = []
-            for row in data.y:
-                flat_list += row
-            data.y = torch.tensor(flat_list).view(-1, 1)
+            # flat_list = []
+            # for row in data.y:
+            #     flat_list += row
+            # data.y = torch.tensor(flat_list).view(-1, 1)
             # set past gradient to zero
             optimiser.zero_grad()
             # compute current value of loss function via forward pass
@@ -95,10 +97,10 @@ def objective(trial):
         with torch.no_grad():
             for batch, d in enumerate(validate_loader):
                 d = d.to(device)
-                flat_list = []
-                for row in d.y:
-                    flat_list += row
-                d.y = torch.tensor(flat_list).view(-1, 1)
+                # flat_list = []
+                # for row in d.y:
+                #     flat_list += row
+                # d.y = torch.tensor(flat_list).view(-1, 1)
                 # forward pass: compute predicted outputs by passing inputs to the model
                 output = model(d)
                 # calculate the loss
