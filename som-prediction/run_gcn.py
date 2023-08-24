@@ -40,14 +40,15 @@ train_loader, validate_loader, test_loader, num_node_features, max_length = data
 
 # set parameters for model training
 #device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
-device=torch.device('cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#device=torch.device('cpu')
 epochs = config['n_epochs']
 
 # instantiate model
 model = GCN(num_node_features)
-optimiser = torch.optim.Adam(model.parameters(), lr=0.0045)
+optimiser = torch.optim.Adam(model.parameters(), lr=0.00035)
 print('previous positive weighting: ', (max_length-1))
-loss_function = nn.BCEWithLogitsLoss(pos_weight = torch.tensor(44))
+loss_function = nn.BCEWithLogitsLoss(pos_weight = torch.tensor(47))
 
 model.to(device)
 

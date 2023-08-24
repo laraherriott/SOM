@@ -5,9 +5,9 @@ from torch.nn import Linear
 class GCN(nn.Module):
     def __init__(self, num_node_features):
         super().__init__()
-        n_layers = 4
+        n_layers = 2
         width = 256
-        drop_prop = 0.22 
+        drop_prop = 0.49 
 
         # in channels is number of features
         # out channel is number of classes to predict, here 1 since just predicting atom SOM
