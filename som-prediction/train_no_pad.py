@@ -142,7 +142,7 @@ def soms_match_fn(G, P, L):
 
         new_P = []
         for i in P[k]:
-            new_P.append(int(i))
+            new_P.append(float(i))
         per_mol_P = list()
         count = 0
         for i in L[k]:
@@ -181,7 +181,7 @@ def soms_match_fn_test(G, P, L):
 
         new_P = []
         for i in P[k]:
-            new_P.append(int(i))
+            new_P.append(float(i))
         per_mol_P = list()
         count = 0
         for i in L[k]:
