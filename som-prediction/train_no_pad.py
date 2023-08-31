@@ -136,7 +136,14 @@ def soms_match_fn(G, P, L):
         
         batch_real = list()
         for mol in per_mol:
-            batch_real.append(mol.index(1)+1)
+            if sum(mol) == 1:
+                batch_real.append(mol.index(1)+1)
+            else:
+                sub_list = []
+                for i, v in enumerate(mol):
+                    if v == 1:
+                        sub_list.append(i+1)
+                batch_real.append(sub_list)
             
         real.append(batch_real)
 
@@ -175,7 +182,14 @@ def soms_match_fn_test(G, P, L):
         
         batch_real = list()
         for mol in per_mol:
-            batch_real.append(mol.index(1)+1)
+            if sum(mol) == 1:
+                batch_real.append(mol.index(1)+1)
+            else:
+                sub_list = []
+                for i, v in enumerate(mol):
+                    if v == 1:
+                        sub_list.append(i+1)
+                batch_real.append(sub_list)
         
         real.append(batch_real)
 

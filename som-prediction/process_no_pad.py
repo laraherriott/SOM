@@ -33,7 +33,8 @@ class PreProcessing:
 
         for (som, atom_number) in zip(soms, max):
             mol_list = [int(0)]*atom_number
-            mol_list[som-1] = int(1)
+            for element in som:
+                mol_list[element-1] = int(1)
             new_soms.append(mol_list)
 
         return new_soms
