@@ -118,7 +118,7 @@ for i in SOM_XenoSite:
         new_SOMS.append(soms)
 
 # preprocessing for featurisation, test/train split, and locading into batches
-dataset = PreProcessing(MOLS_XenoSite, SOM_XenoSite, config['split'], config['batch_size']) # smiles, soms, split, batch_size
+dataset = PreProcessing(MOLS_XenoSite, new_SOMS, config['split'], config['batch_size']) # smiles, soms, split, batch_size
 
 train_loader, validate_loader, test_loader, num_node_features, max_length = dataset.create_data_loaders()
 

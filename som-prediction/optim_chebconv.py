@@ -107,11 +107,17 @@ XenoSite_sdf = PandasTools.LoadSDF(config['data'])
 MOLS_XenoSite = XenoSite_sdf['ROMol']
 SOM_XenoSite = XenoSite_sdf['PRIMARY_SOM']
 
-# in cases where multiple SOMs are listed, take the first only
-SOM_XenoSite = [int([*i][0]) for i in SOM_XenoSite]
+new_SOMS = []
+for i in SOM_XenoSite:
+    if len(i) == 1:
+        new_SOMS.append([int(i)])
+    else:
+        strings = i.split()
+        soms = [int(j) for j in strings]
+        new_SOMS.append(soms)
 
 # preprocessing for featurisation, test/train split, and locading into batches
-dataset = PreProcessing(MOLS_XenoSite, SOM_XenoSite, config['split'], config['batch_size']) # smiles, soms, split, batch_size
+dataset = PreProcessing(MOLS_XenoSite, new_SOMS, config['split'], config['batch_size']) # smiles, soms, split, batch_size
 
 train_loader, validate_loader, test_loader, num_node_features, max_length = dataset.create_data_loaders()
 
