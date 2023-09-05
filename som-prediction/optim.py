@@ -16,7 +16,7 @@ import sklearn.preprocessing as sklearn_pre
 
 import optuna
 
-from preprocessing import PreProcessing
+from process_no_pad import PreProcessing
 
 class GCN(nn.Module):
     def __init__(self, trial, num_node_features):
@@ -24,9 +24,6 @@ class GCN(nn.Module):
         n_layers = trial.suggest_int("n_layers", 1, 5)
         width = int(trial.suggest_categorical("width", ['128', '256', '512']))
         drop_prop = trial.suggest_float("drop_prop", 0.2, 0.5)
-
-        relu = nn.ReLU()
-        drop = nn.Dropout(drop_prop)
 
         # in channels is number of features
         # out channel is number of classes to predict, here 1 since just predicting atom SOM
@@ -51,6 +48,7 @@ class GCN(nn.Module):
         # layers.append(nn.ReLU())
         # layers.append(nn.Dropout(drop_prop))
         #layers.append((gnn.GCNConv(int(width/2), 1), 'x, edge_index -> x'))
+        layers.append((gnn.GCNConv(width, width), 'x, edge_index -> x'))
         layers.append((gnn.Linear(width, 1)))
 
         self.layers = gnn.Sequential('x, edge_index', layers)
@@ -75,7 +73,7 @@ def objective(trial):
         # set model to training mode
         model.train()
         # loop over minibatches for training
-        for batch, data in enumerate(train_loader):
+        for batch, (data, nodes) in enumerate(train_loader):
             data = data.to(device)
             # flat_list = []
             # for row in data.y:
@@ -95,7 +93,7 @@ def objective(trial):
 
         model.eval() # prep model for evaluation
         with torch.no_grad():
-            for batch, d in enumerate(validate_loader):
+            for batch, (d, n) in enumerate(validate_loader):
                 d = d.to(device)
                 # flat_list = []
                 # for row in d.y:
@@ -117,7 +115,7 @@ def objective(trial):
     return loss
 
 # set seed
-random.seed(1)
+random.seed(10)
 
 # take file name from command line
 file = sys.argv[1]
@@ -130,7 +128,14 @@ MOLS_XenoSite = XenoSite_sdf['ROMol']
 SOM_XenoSite = XenoSite_sdf['PRIMARY_SOM']
 
 # in cases where multiple SOMs are listed, take the first only
-SOM_XenoSite = [int([*i][0]) for i in SOM_XenoSite]
+new_SOMS = []
+for i in SOM_XenoSite:
+    if len(i) == 1:
+        new_SOMS.append([int(i)])
+    else:
+        strings = i.split()
+        soms = [int(j) for j in strings]
+        new_SOMS.append(soms)
 
 # preprocessing for featurisation, test/train split, and locading into batches
 dataset = PreProcessing(MOLS_XenoSite, SOM_XenoSite, config['split'], config['batch_size']) # smiles, soms, split, batch_size
@@ -154,4 +159,4 @@ for key, value in trial.params.items():
     print("    {}: {}".format(key, value))
 
 results = pd.DataFrame(trial.params, index=[0])
-results.to_csv('optuna_output.csv')
+results.to_csv('optuna_gcn_output.csv')

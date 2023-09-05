@@ -3,8 +3,9 @@ import statistics
 import numpy as np
 import torch
 import torch.nn as nn
+import os
 
-def train(model, train_loader, validate_loader, epochs, device, optimiser, loss_function):
+def train(model, train_loader, validate_loader, epochs, device, optimiser, loss_function, model_output_dir, model_file_name):
 
 # model, device, loss_fn, train_loader, valid_loader, test_loader, optimizer, model_file_name, model_output_dir, n_epochs,
 #                is_GNN, train_data.y_scaler
@@ -77,6 +78,11 @@ def train(model, train_loader, validate_loader, epochs, device, optimiser, loss_
             # check_train_loss = None
 
         print('Epoch {} completed'.format(epoch))
+
+        if epoch == 100:
+            file_name = model_file_name + '100th'
+            torch.save(model.state_dict(), os.path.join(model_output_dir, file_name))
+
     
     return loss_list, loss_validate, som_match, top_pred
 

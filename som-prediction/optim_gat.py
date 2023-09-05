@@ -16,7 +16,7 @@ import sklearn.preprocessing as sklearn_pre
 
 import optuna
 
-from preprocessing import PreProcessing
+from process_no_pad import PreProcessing
 
 class GAT(nn.Module):
     def __init__(self, trial, num_node_features):
@@ -38,7 +38,7 @@ class GAT(nn.Module):
         layers.append((gnn.GATv2Conv(num_node_features*4*head, width, heads = 1, dropout = gat_drop), 'x, edge_index -> x'))
         layers.append(nn.ReLU())
         layers.append(nn.Dropout(drop_prop))
-        layers.append((gnn.GCNConv(width, 1), 'x, edge_index -> x'))
+        layers.append((gnn.Linear(width, 1)))
 
         self.layers = gnn.Sequential('x, edge_index', layers)
 
@@ -51,7 +51,6 @@ def objective(trial):
     # Create a convolutional neural network.
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = GAT(trial, num_node_features).to(device)
-    print(model)
     lr = trial.suggest_float("lr", 1e-5, 1e-1, log=True)
     optimiser = torch.optim.Adam(model.parameters(), lr=lr)
     pos_weighting = trial.suggest_int('pos_weighting', int((max_length-1)/2), int(max_length-1))
@@ -63,12 +62,8 @@ def objective(trial):
         # set model to training mode
         model.train()
         # loop over minibatches for training
-        for batch, data in enumerate(train_loader):
+        for batch, (data, nodes) in enumerate(train_loader):
             data = data.to(device)
-            flat_list = []
-            for row in data.y:
-                flat_list += row
-            data.y = torch.tensor(flat_list).view(-1, 1)
             # set past gradient to zero
             optimiser.zero_grad()
             # compute current value of loss function via forward pass
@@ -83,12 +78,8 @@ def objective(trial):
 
         model.eval() # prep model for evaluation
         with torch.no_grad():
-            for batch, d in enumerate(validate_loader):
+            for batch, (d, n) in enumerate(validate_loader):
                 d = d.to(device)
-                flat_list = []
-                for row in d.y:
-                    flat_list += row
-                d.y = torch.tensor(flat_list).view(-1, 1)
                 # forward pass: compute predicted outputs by passing inputs to the model
                 output = model(d)
                 # calculate the loss
@@ -105,7 +96,7 @@ def objective(trial):
     return loss
 
 # set seed
-random.seed(1)
+random.seed(10)
 
 # take file name from command line
 file = sys.argv[1]
@@ -117,8 +108,14 @@ XenoSite_sdf = PandasTools.LoadSDF(config['data'])
 MOLS_XenoSite = XenoSite_sdf['ROMol']
 SOM_XenoSite = XenoSite_sdf['PRIMARY_SOM']
 
-# in cases where multiple SOMs are listed, take the first only
-SOM_XenoSite = [int([*i][0]) for i in SOM_XenoSite]
+new_SOMS = []
+for i in SOM_XenoSite:
+    if len(i) == 1:
+        new_SOMS.append([int(i)])
+    else:
+        strings = i.split()
+        soms = [int(j) for j in strings]
+        new_SOMS.append(soms)
 
 # preprocessing for featurisation, test/train split, and locading into batches
 dataset = PreProcessing(MOLS_XenoSite, SOM_XenoSite, config['split'], config['batch_size']) # smiles, soms, split, batch_size
