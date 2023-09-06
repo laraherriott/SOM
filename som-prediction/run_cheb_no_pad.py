@@ -9,13 +9,12 @@ from rdkit.Chem import PandasTools
 
 import torch
 import torch.nn as nn
-import torch_geometric
 import torch_geometric.nn as gnn
 
 import sklearn.preprocessing as sklearn_pre
 
 from process_no_pad import PreProcessing
-from gnns import GCN
+from gnns import ChebConv
 from train_no_pad import train, predict, soms_match_fn_test
 
 # set seed
@@ -26,6 +25,7 @@ file = sys.argv[1]
 with open(file) as config_file:
     config = json.load(config_file)
 
+# Load data from sdf
 XenoSite_sdf = PandasTools.LoadSDF(config['data'])
 MOLS_XenoSite = XenoSite_sdf['ROMol']
 SOM_XenoSite = XenoSite_sdf['PRIMARY_SOM']
@@ -72,18 +72,17 @@ train_loader, validate_loader, test_loader, num_node_features, max_length, smile
 #device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 #device=torch.device('cpu')
-epochs = config['n_epochs']
+epochs =  config['n_epochs']
 
 # instantiate model
-model = GCN(73)
-optimiser = torch.optim.Adam(model.parameters(), lr=0.0011)
-#print('previous positive weighting: ', (max_length-1))
+model = ChebConv(num_node_features)
+optimiser = torch.optim.Adam(model.parameters(), lr=0.0074)
 loss_function = nn.BCEWithLogitsLoss(pos_weight = torch.tensor(47))
 
 model.to(device)
 
 model_output_dir = config['model']
-model_file_name = 'GCN_1'
+model_file_name = 'Cheb'
 
 # train model
 y_scaler = sklearn_pre.StandardScaler() # subtract mean and scale to unit variance

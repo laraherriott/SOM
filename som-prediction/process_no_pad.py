@@ -5,12 +5,13 @@ import torch_geometric
 from rdkit import Chem
 import torch
 from torch_geometric.data import Dataset
+from sklearn.utils import shuffle
 
 from feature_no_pad import Featurisation
 
 class PreProcessing:
 
-    def __init__(self, mols, soms, split, batch_size):
+    def __init__(self, mols, soms, second_SOMS, third_SOMS, split, batch_size):
         self.mols = mols
         self.training_prop = split[0]
         self.validate_prop = split[1]
@@ -19,6 +20,10 @@ class PreProcessing:
 
         self.no_atoms, self.no_bonds = self.find_largest_molecule(self.mols)
         self.soms = self.create_som_list(soms, self.no_atoms)
+
+        self.smiles = [Chem.MolToSmiles(mol) for mol in mols]
+        self.second = second_SOMS
+        self.tert = third_SOMS
 
     def find_largest_molecule(self, mols):
         lengths = [mol.GetNumAtoms() for mol  in mols]
@@ -49,22 +54,32 @@ class PreProcessing:
 
         data, num_features, lengths = self.featurise()
 
-        random.shuffle(data)
+        extra_info = list(zip(self.smiles, self.second, self.tert))
+        combined = list(zip(data, extra_info))
 
-        train_length = math.ceil(self.training_prop*len(data))
-        remaining = data[train_length:]
+        random.shuffle(combined)
+
+        data_shuffled, info_shuffled = zip(*combined)
+        smiles_shuffled, second_shuffled, tert_shuffled = zip(*info_shuffled)
+
+        train_length = math.ceil(self.training_prop*len(data_shuffled))
+        remaining = data_shuffled[train_length:]
         validate_length = math.ceil(self.validate_prop*len(remaining))
-        test_length = len(data) - (train_length+validate_length)
+        test_length = len(data_shuffled) - (train_length+validate_length)
 
-        train_dataset = data[:train_length]
-        validate_dataset = data[train_length:(train_length+validate_length)]
-        test_dataset = data[(train_length+validate_length):]
+        train_dataset = data_shuffled[:train_length]
+        validate_dataset = data_shuffled[train_length:(train_length+validate_length)]
+        test_dataset = data_shuffled[(train_length+validate_length):]
 
-        return train_dataset, test_dataset, validate_dataset, num_features, lengths
+        smiles_test = smiles_shuffled[(train_length+validate_length):]
+        secondary_test = second_shuffled[(train_length+validate_length):]
+        tertiary_test = tert_shuffled[(train_length+validate_length):]
+
+        return train_dataset, test_dataset, validate_dataset, num_features, lengths, smiles_test, secondary_test, tertiary_test
 
 
     def create_data_loaders(self):
-        train, test, validate, num_features, lengths = self.test_train_split()
+        train, test, validate, num_features, lengths, smiles_test, secondary_test, tertiary_test  = self.test_train_split()
 
         # torch.save(train, 'training_no_pad.pt')
         # torch.save(validate, 'validate_no_pad.pt')
@@ -86,7 +101,7 @@ class PreProcessing:
             validate_loader = None
 
         
-        return train_loader, validate_loader, test_loader, num_features, lengths
+        return train_loader, validate_loader, test_loader, num_features, lengths, smiles_test, secondary_test, tertiary_test
     
 
 class MyDataset(Dataset):
