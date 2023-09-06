@@ -53,7 +53,7 @@ def objective(trial):
     model = GAT(trial, num_node_features).to(device)
     lr = trial.suggest_float("lr", 1e-5, 1e-1, log=True)
     optimiser = torch.optim.Adam(model.parameters(), lr=lr)
-    pos_weighting = trial.suggest_int('pos_weighting', int((max_length-1)/2), int(max_length-1))
+    pos_weighting = trial.suggest_int('pos_weighting', int((max(max_length)-1)/2), int(max(max_length)-1))
     loss_function = nn.BCEWithLogitsLoss(pos_weight = torch.tensor(pos_weighting))
 
 
