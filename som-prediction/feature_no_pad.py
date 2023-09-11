@@ -138,6 +138,7 @@ class Featurisation:
         data_list = [G_1, G_2, ...] ... a list of torch_geometric.data.Data objects which represent labeled molecular graphs that can readily be used for machine learning
         """
         som_list = list(self.soms)
+        dropped_molecules = []
 
         num_node_features, num_edge_features = self.get_lengths("O=O")
 
@@ -160,6 +161,7 @@ class Featurisation:
 
             node_feature = self.combine_atom_features(mol, node_feature)
             if node_feature is None:
+                dropped_molecules.append(Chem.MolToSmiles(mol))
                 continue
             else:
                 node_feature = torch.tensor(node_feature, dtype = torch.float)
@@ -183,5 +185,5 @@ class Featurisation:
             
                 # construct Pytorch Geometric data object and append to data list
                 data_list.append(Data(x = node_feature, edge_index = edge, edge_attr = edge_features, y = som_tensor))
-        return data_list, num_node_features, self.no_atoms
+        return data_list, num_node_features, self.no_atoms, dropped_molecules
 

@@ -11,7 +11,7 @@ from feature_no_pad import Featurisation
 
 class PreProcessing:
 
-    def __init__(self, mols, soms, second_SOMS, third_SOMS, split, batch_size):
+    def __init__(self, mols, soms, second_SOMS, third_SOMS, split, batch_size, all_soms = False):
         self.mols = mols
         self.training_prop = split[0]
         self.validate_prop = split[1]
@@ -19,11 +19,13 @@ class PreProcessing:
         self.batch_size = batch_size
 
         self.no_atoms, self.no_bonds = self.find_largest_molecule(self.mols)
-        self.soms = self.create_som_list(soms, self.no_atoms)
+        self.soms = self.create_som_list(soms, second_SOMS, third_SOMS, self.no_atoms)
 
         self.smiles = [Chem.MolToSmiles(mol) for mol in mols]
         self.second = second_SOMS
         self.tert = third_SOMS
+
+        self.all_soms = all_soms
 
     def find_largest_molecule(self, mols):
         lengths = [mol.GetNumAtoms() for mol  in mols]
@@ -33,8 +35,11 @@ class PreProcessing:
 
         return lengths, bonds
 
-    def create_som_list(self, soms, max):
+    def create_som_list(self, soms, second_SOMS, third_SOMS, max):
         new_soms = []
+
+        if self.all_soms is True:
+            soms = zip(soms, second_SOMS, third_SOMS)
 
         for (som, atom_number) in zip(soms, max):
             mol_list = [int(0)]*atom_number
@@ -47,20 +52,27 @@ class PreProcessing:
     def featurise(self):
         features = Featurisation(self.mols, self.soms, self.no_atoms, self.no_bonds)
 
-        graph_object, num_node_features, max_length = features.create_pytorch_geometric_graph_data_list_from_smiles_and_labels()
-        return graph_object, num_node_features, max_length
+        graph_object, num_node_features, max_length, dropped_molecules = features.create_pytorch_geometric_graph_data_list_from_smiles_and_labels()
+        return graph_object, num_node_features, max_length, dropped_molecules
     
     def test_train_split(self):
 
-        data, num_features, lengths = self.featurise()
+        data, num_features, lengths, dropped_molecules = self.featurise()
 
-        extra_info = list(zip(self.smiles, self.second, self.tert))
-        combined = list(zip(data, extra_info))
+        for i, s in enumerate(self.smiles):
+            if s in dropped_molecules:
+                self.smiles.pop(i)
+                self.second.pop(i)
+                self.tert.pop(i)
+                self.mols_all.pop(i)
 
-        random.shuffle(combined)
+        indices = list(range(len(data)))  # Generate a list of indices.
+        random.shuffle(indices) 
 
-        data_shuffled, info_shuffled = zip(*combined)
-        smiles_shuffled, second_shuffled, tert_shuffled = zip(*info_shuffled)
+        data_shuffled = [data[i] for i in indices]
+        smiles_shuffled =[self.smiles[i] for i in indices]
+        second_shuffled =[self.second[i] for i in indices]
+        tert_shuffled = [self.tert[i] for i in indices]
 
         train_length = math.ceil(self.training_prop*len(data_shuffled))
         remaining = data_shuffled[train_length:]
@@ -71,15 +83,17 @@ class PreProcessing:
         validate_dataset = data_shuffled[train_length:(train_length+validate_length)]
         test_dataset = data_shuffled[(train_length+validate_length):]
 
+        smiles_train = smiles_shuffled[:train_length]
+        smiles_validate = smiles_shuffled[train_length:(train_length+validate_length)]
         smiles_test = smiles_shuffled[(train_length+validate_length):]
         secondary_test = second_shuffled[(train_length+validate_length):]
         tertiary_test = tert_shuffled[(train_length+validate_length):]
 
-        return train_dataset, test_dataset, validate_dataset, num_features, lengths, smiles_test, secondary_test, tertiary_test
+        return train_dataset, test_dataset, validate_dataset, num_features, lengths, smiles_train, smiles_validate, smiles_test, secondary_test, tertiary_test
 
 
     def create_data_loaders(self):
-        train, test, validate, num_features, lengths, smiles_test, secondary_test, tertiary_test  = self.test_train_split()
+        train, test, validate, num_features, lengths, smiles_train, smiles_validate, smiles_test, secondary_test, tertiary_test  = self.test_train_split()
 
         # torch.save(train, 'training_no_pad.pt')
         # torch.save(validate, 'validate_no_pad.pt')
@@ -101,7 +115,7 @@ class PreProcessing:
             validate_loader = None
 
         
-        return train_loader, validate_loader, test_loader, num_features, lengths, smiles_test, secondary_test, tertiary_test
+        return train_loader, validate_loader, test_loader, num_features, lengths, smiles_train, smiles_validate, smiles_test, secondary_test, tertiary_test
     
 
 class MyDataset(Dataset):
