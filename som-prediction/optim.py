@@ -126,6 +126,8 @@ with open(file) as config_file:
 XenoSite_sdf = PandasTools.LoadSDF(config['data'])
 MOLS_XenoSite = XenoSite_sdf['ROMol']
 SOM_XenoSite = XenoSite_sdf['PRIMARY_SOM']
+Secondary = XenoSite_sdf['SECONDARY_SOM'].fillna(0)
+Tertiary = XenoSite_sdf['TERTIARY_SOM'].fillna(0)
 
 # in cases where multiple SOMs are listed, take the first only
 new_SOMS = []
@@ -137,10 +139,32 @@ for i in SOM_XenoSite:
         soms = [int(j) for j in strings]
         new_SOMS.append(soms)
 
-# preprocessing for featurisation, test/train split, and locading into batches
-dataset = PreProcessing(MOLS_XenoSite, new_SOMS, config['split'], config['batch_size']) # smiles, soms, split, batch_size
+second_SOMS = []
+for i in Secondary:
+    if i ==0:
+        second_SOMS.append([0])
+    elif len(i) == 1:
+        second_SOMS.append([int(i)])
+    else:
+        strings = i.split()
+        soms = [int(j) for j in strings]
+        second_SOMS.append(soms)
+        
+third_SOMS = []
+for i in Tertiary:
+    if i == 0:
+        third_SOMS.append([0])
+    elif len(i) == 1:
+        third_SOMS.append([int(i)])
+    else:
+        strings = i.split()
+        soms = [int(j) for j in strings]
+        third_SOMS.append(soms)
 
-train_loader, validate_loader, test_loader, num_node_features, max_length = dataset.create_data_loaders()
+# preprocessing for featurisation, test/train split, and locading into batches
+dataset = PreProcessing(MOLS_XenoSite, new_SOMS, second_SOMS, third_SOMS, config['split'], config['batch_size'], all_soms=True) # smiles, soms, split, batch_size
+
+train_loader, validate_loader, test_loader, num_node_features, max_length, smiles_validate, smiles_test, secondary_test, tertiary_test = dataset.create_data_loaders()
 
 epochs = config['n_epochs']
 
@@ -159,4 +183,4 @@ for key, value in trial.params.items():
     print("    {}: {}".format(key, value))
 
 results = pd.DataFrame(trial.params, index=[0])
-results.to_csv('optuna_gcn_output.csv')
+results.to_csv('optuna_gcn_2_output.csv')
