@@ -60,7 +60,7 @@ class GCN(nn.Module):
 
 def objective(trial):
     # Create a convolutional neural network.
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')#torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = GCN(trial, num_node_features).to(device)
     lr = trial.suggest_float("lr", 1e-5, 1e-1, log=True)
     optimiser = torch.optim.Adam(model.parameters(), lr=lr)
@@ -164,7 +164,7 @@ for i in Tertiary:
 # preprocessing for featurisation, test/train split, and locading into batches
 dataset = PreProcessing(MOLS_XenoSite, new_SOMS, second_SOMS, third_SOMS, config['split'], config['batch_size'], all_soms=True) # smiles, soms, split, batch_size
 
-train_loader, validate_loader, test_loader, num_node_features, max_length, smiles_validate, smiles_test, secondary_test, tertiary_test = dataset.create_data_loaders()
+train_loader, validate_loader, test_loader, num_node_features, max_length, smiles_train, smiles_validate, smiles_test, secondary_test, tertiary_test = dataset.create_data_loaders()
 
 epochs = config['n_epochs']
 
