@@ -64,9 +64,9 @@ for i in Tertiary:
         third_SOMS.append(soms)
 
 # preprocessing for featurisation, test/train split, and locading into batches
-dataset = PreProcessing(MOLS_XenoSite, new_SOMS, second_SOMS, third_SOMS, config['split'], config['batch_size']) # smiles, soms, split, batch_size
+dataset = PreProcessing(MOLS_XenoSite, new_SOMS, second_SOMS, third_SOMS, config['split'], config['batch_size'], all_soms=True) # smiles, soms, split, batch_size
 
-train_loader, validate_loader, test_loader, num_node_features, max_length, smiles_test, secondary_test, tertiary_test = dataset.create_data_loaders()
+train_loader, validate_loader, test_loader, num_node_features, max_length, smiles_train, smiles_validate, smiles_test, secondary_test, tertiary_test = dataset.create_data_loaders()
 
 # set parameters for model training
 #device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
@@ -83,7 +83,7 @@ loss_function = nn.BCEWithLogitsLoss(pos_weight = torch.tensor(47))
 model.to(device)
 
 model_output_dir = config['model']
-model_file_name = 'GCN_1'
+model_file_name = 'GCN_2'
 
 # train model
 y_scaler = sklearn_pre.StandardScaler() # subtract mean and scale to unit variance
@@ -105,5 +105,11 @@ df_training_history.to_csv(os.path.join(os.path.join(config['output'],"training_
 test_results = pd.DataFrame({"actual_soms": actual_som_test, "predicted_primary_soms": top_pred_test, "all_probabilities": predictions, "molecule_lengths": L_test})
 test_results.to_csv(os.path.join(os.path.join(config['output']), model_file_name + ".csv"))
 
-test_extra_info = pd.DataFrame({'SMILES': smiles_test, 'SECONDARY': secondary_test, 'TERTIARY': tertiary_test })
+test_extra_info = pd.DataFrame({'SMILES': smiles_test, 'SECONDARY': secondary_test, 'TERTIARY': tertiary_test})
 test_extra_info.to_csv(os.path.join(os.path.join(config['output']), model_file_name + "_extra.csv"))
+
+train_extra_info = pd.DataFrame({'SMILES': smiles_train})
+train_extra_info.to_csv(os.path.join(os.path.join(config['output']), model_file_name + "_train_extra.csv"))
+
+validate_extra_info = pd.DataFrame({'SMILES': smiles_validate})
+validate_extra_info.to_csv(os.path.join(os.path.join(config['output']), model_file_name + "_validate_extra.csv"))
