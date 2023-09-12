@@ -39,7 +39,7 @@ class PreProcessing:
         new_soms = []
 
         if self.all_soms is True:
-            soms = zip(soms, second_SOMS, third_SOMS)
+            soms = soms + second_SOMS + third_SOMS
 
         for (som, atom_number) in zip(soms, max):
             mol_list = [int(0)]*atom_number
