@@ -18,14 +18,14 @@ class PreProcessing:
         self.testing_prop = split[2]
         self.batch_size = batch_size
 
+        self.all_soms = all_soms
+
         self.no_atoms, self.no_bonds = self.find_largest_molecule(self.mols)
         self.soms = self.create_som_list(soms, second_SOMS, third_SOMS, self.no_atoms)
 
         self.smiles = [Chem.MolToSmiles(mol) for mol in mols]
         self.second = second_SOMS
         self.tert = third_SOMS
-
-        self.all_soms = all_soms
 
     def find_largest_molecule(self, mols):
         lengths = [mol.GetNumAtoms() for mol  in mols]
