@@ -82,7 +82,7 @@ loss_function = nn.BCEWithLogitsLoss(pos_weight = torch.tensor(44))
 model.to(device)
 
 model_output_dir = config['model']
-model_file_name = 'GATv2_2'
+model_file_name = 'GATv2_1'
 
 # train model
 y_scaler = sklearn_pre.StandardScaler() # subtract mean and scale to unit variance

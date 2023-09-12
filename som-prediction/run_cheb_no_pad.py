@@ -82,7 +82,7 @@ loss_function = nn.BCEWithLogitsLoss(pos_weight = torch.tensor(47))
 model.to(device)
 
 model_output_dir = config['model']
-model_file_name = 'Cheb_2'
+model_file_name = 'Cheb_1'
 
 # train model
 y_scaler = sklearn_pre.StandardScaler() # subtract mean and scale to unit variance

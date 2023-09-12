@@ -39,8 +39,8 @@ dataset = PreProcessing(MOLS_XenoSite, SOM_XenoSite, config['split'], config['ba
 train_loader, validate_loader, test_loader, num_node_features, max_length = dataset.create_data_loaders()
 
 # set parameters for model training
-#device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+#device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 #device=torch.device('cpu')
 epochs = config['n_epochs']
 
