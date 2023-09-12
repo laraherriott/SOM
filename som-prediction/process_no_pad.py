@@ -64,7 +64,6 @@ class PreProcessing:
                 self.smiles.pop(i)
                 self.second.pop(i)
                 self.tert.pop(i)
-                self.mols_all.pop(i)
 
         indices = list(range(len(data)))  # Generate a list of indices.
         random.shuffle(indices) 
@@ -76,7 +75,7 @@ class PreProcessing:
 
         train_length = math.ceil(self.training_prop*len(data_shuffled))
         remaining = data_shuffled[train_length:]
-        validate_length = math.ceil(self.validate_prop*len(remaining))
+        validate_length = math.ceil(self.validate_prop*len(data_shuffled))
         test_length = len(data_shuffled) - (train_length+validate_length)
 
         train_dataset = data_shuffled[:train_length]
