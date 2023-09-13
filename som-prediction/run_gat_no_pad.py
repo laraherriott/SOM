@@ -64,7 +64,7 @@ for i in Tertiary:
         third_SOMS.append(soms)
 
 # preprocessing for featurisation, test/train split, and locading into batches
-dataset = PreProcessing(MOLS_XenoSite, new_SOMS, second_SOMS, third_SOMS, config['split'], config['batch_size'], all_soms=False) # smiles, soms, split, batch_size
+dataset = PreProcessing(MOLS_XenoSite, new_SOMS, second_SOMS, third_SOMS, config['split'], config['batch_size'], all_soms=True) # smiles, soms, split, batch_size
 
 train_loader, validate_loader, test_loader, num_node_features, max_length,  smiles_train, smiles_validate, smiles_test, secondary_test, tertiary_test = dataset.create_data_loaders()
 
@@ -76,13 +76,13 @@ epochs = config['n_epochs']
 
 # instantiate model
 model = GATv2(num_node_features)
-optimiser = torch.optim.Adam(model.parameters(), lr=0.0026)
+optimiser = torch.optim.Adam(model.parameters(), lr=0.00012)
 loss_function = nn.BCEWithLogitsLoss(pos_weight = torch.tensor(44))
 
 model.to(device)
 
 model_output_dir = config['model']
-model_file_name = 'GATv2_1'
+model_file_name = 'GATv2_2'
 
 # train model
 y_scaler = sklearn_pre.StandardScaler() # subtract mean and scale to unit variance

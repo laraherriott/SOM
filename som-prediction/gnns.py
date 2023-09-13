@@ -5,9 +5,9 @@ from torch.nn import Linear
 class GCN(nn.Module):
     def __init__(self, num_node_features):
         super().__init__()
-        n_layers = 3
+        n_layers = 2
         width = 256
-        drop_prop = 0.22
+        drop_prop = 0.27
         layers = []
         layers.append((gnn.GCNConv(num_node_features, width), 'x, edge_index -> x'))
         layers.append(nn.ReLU())
@@ -31,9 +31,9 @@ class ChebConv(nn.Module):
     def __init__(self, num_node_features):
         super().__init__()
         width = 512
-        n_layers = 1
+        n_layers = 3
         k_choice = 5
-        drop_prop = 0.46
+        drop_prop = 0.37
         layers = []
         layers.append((gnn.ChebConv(num_node_features, width, K=k_choice), 'x, edge_index -> x'))
         layers.append(nn.ReLU())
@@ -55,10 +55,10 @@ class ChebConv(nn.Module):
 class GATv2(nn.Module):
     def __init__(self, num_node_features):
         super().__init__()
-        width = 256
-        drop_prop = 0.21
-        gat_drop = 0.29
-        head = 6
+        width = 512
+        drop_prop = 0.27
+        gat_drop = 0.12
+        head = 9
         layers = []
         layers.append((gnn.GATv2Conv(num_node_features, num_node_features, heads = head, dropout = gat_drop), 'x, edge_index -> x'))
         layers.append(nn.ReLU())

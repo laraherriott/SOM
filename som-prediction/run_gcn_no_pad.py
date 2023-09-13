@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch_geometric
 import torch_geometric.nn as gnn
 
-import sklearn.preprocessing as sklearn_pre
+#import sklearn.preprocessing as sklearn_pre
 
 from process_no_pad import PreProcessing
 from gnns import GCN
@@ -64,7 +64,7 @@ for i in Tertiary:
         third_SOMS.append(soms)
 
 # preprocessing for featurisation, test/train split, and locading into batches
-dataset = PreProcessing(MOLS_XenoSite, new_SOMS, second_SOMS, third_SOMS, config['split'], config['batch_size'], all_soms=False) # smiles, soms, split, batch_size
+dataset = PreProcessing(MOLS_XenoSite, new_SOMS, second_SOMS, third_SOMS, config['split'], config['batch_size'], all_soms=True) # smiles, soms, split, batch_size
 
 train_loader, validate_loader, test_loader, num_node_features, max_length, smiles_train, smiles_validate, smiles_test, secondary_test, tertiary_test = dataset.create_data_loaders()
 
@@ -75,18 +75,18 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 epochs = config['n_epochs']
 
 # instantiate model
-model = GCN(73)
-optimiser = torch.optim.Adam(model.parameters(), lr=0.0011)
+model = GCN(num_node_features)
+optimiser = torch.optim.Adam(model.parameters(), lr=0.0164)
 #print('previous positive weighting: ', (max_length-1))
-loss_function = nn.BCEWithLogitsLoss(pos_weight = torch.tensor(47))
+loss_function = nn.BCEWithLogitsLoss(pos_weight = torch.tensor(44))
 
 model.to(device)
 
 model_output_dir = config['model']
-model_file_name = 'GCN_1'
+model_file_name = 'GCN_2'
 
 # train model
-y_scaler = sklearn_pre.StandardScaler() # subtract mean and scale to unit variance
+#y_scaler = sklearn_pre.StandardScaler() # subtract mean and scale to unit variance
 loss_list, loss_validate, som_match, top_pred = train(model, train_loader, validate_loader, epochs, device, optimiser, loss_function, model_output_dir, model_file_name)
 if len(loss_validate) == 0:
     loss_validate = [0]*len(loss_list)
