@@ -66,7 +66,7 @@ for i in Tertiary:
 # preprocessing for featurisation, test/train split, and locading into batches
 dataset = PreProcessing(MOLS_XenoSite, new_SOMS, second_SOMS, third_SOMS, config['split'], config['batch_size'], all_soms=True) # smiles, soms, split, batch_size
 
-train_loader, validate_loader, test_loader, num_node_features, max_length, smiles_train, smiles_validate, smiles_test, secondary_test, tertiary_test = dataset.create_data_loaders()
+train_loader, validate_loader, test_loader, num_node_features, max_length, smiles_train, smiles_validate, smiles_test, secondary_test, tertiary_test = dataset.create_data_loaders_gnn_som()
 
 # set parameters for model training
 #device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
@@ -76,14 +76,14 @@ epochs = config['n_epochs']
 
 # instantiate model
 model = GCN(num_node_features)
-optimiser = torch.optim.Adam(model.parameters(), lr=0.0164)
+optimiser = torch.optim.Adam(model.parameters(), lr=0.00025)
 #print('previous positive weighting: ', (max_length-1))
 loss_function = nn.BCEWithLogitsLoss(pos_weight = torch.tensor(44))
 
 model.to(device)
 
 model_output_dir = config['model']
-model_file_name = 'GCN_2'
+model_file_name = 'GCN_3'
 
 # train model
 #y_scaler = sklearn_pre.StandardScaler() # subtract mean and scale to unit variance
