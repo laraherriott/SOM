@@ -144,7 +144,7 @@ for i in Tertiary:
 # preprocessing for featurisation, test/train split, and locading into batches
 dataset = PreProcessing(MOLS_XenoSite, new_SOMS, second_SOMS, third_SOMS, config['split'], config['batch_size'], all_soms=True) # smiles, soms, split, batch_size
 
-train_loader, validate_loader, test_loader, num_node_features, max_length, smiles_train, smiles_validate, smiles_test, secondary_test, tertiary_test = dataset.create_data_loaders()
+train_loader, validate_loader, test_loader, num_node_features, max_length, smiles_train, smiles_validate, smiles_test, secondary_test, tertiary_test = dataset.create_data_loaders_gnn_som()
 
 epochs = config['n_epochs']
 
@@ -163,4 +163,4 @@ for key, value in trial.params.items():
     print("    {}: {}".format(key, value))
 
 results = pd.DataFrame(trial.params, index=[0])
-results.to_csv('optuna_gat2v_2_output.csv')
+results.to_csv('optuna_gat2v_3_output.csv')

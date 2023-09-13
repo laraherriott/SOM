@@ -97,6 +97,14 @@ class Featurisation:
                 jazzy_list = jazzy_list[0:4] + hybridisation + jazzy_list[5:]
                 matrix[atom.GetIdx(), :] = generic_list + jazzy_list
             return matrix
+        
+    def combine_atom_features_gnn_som(self, mol, matrix):
+
+        for atom in mol.GetAtoms():
+            generic_list = self.get_atom_features(atom)
+            sub_list = generic_list[:3]
+            matrix[atom.GetIdx(), :] = sub_list
+        return matrix
 
     def get_bond_features(self, bond, 
                           use_stereochemistry = True):
@@ -127,6 +135,16 @@ class Featurisation:
         summary_list = list_atom1[0:4] + hybridisation + list_atom1[5:]
 
         num_node_features = len(self.get_atom_features(unrelated_mol.GetAtomWithIdx(0))) + len(summary_list) # note use the combined features function here
+        num_edge_features = len(self.get_bond_features(unrelated_mol.GetBondBetweenAtoms(0,1)))
+
+        return num_node_features, num_edge_features
+    
+    def get_lengths_gnn_som(self, smile):
+        unrelated_mol = Chem.MolFromSmiles(smile)
+        generic_list = self.get_atom_features(unrelated_mol.GetAtomWithIdx(0))
+        sub_list = generic_list[:3]
+
+        num_node_features = len(sub_list) # note use the combined features function here
         num_edge_features = len(self.get_bond_features(unrelated_mol.GetBondBetweenAtoms(0,1)))
 
         return num_node_features, num_edge_features
@@ -187,3 +205,57 @@ class Featurisation:
                 data_list.append(Data(x = node_feature, edge_index = edge, edge_attr = edge_features, y = som_tensor))
         return data_list, num_node_features, self.no_atoms, dropped_molecules
 
+    def create_pytorch_geometric_graph_data_list_from_smiles_and_labels_gnn_som(self):
+        """
+        Outputs:
+        data_list = [G_1, G_2, ...] ... a list of torch_geometric.data.Data objects which represent labeled molecular graphs that can readily be used for machine learning
+        """
+        som_list = list(self.soms)
+        dropped_molecules = []
+
+        num_node_features, num_edge_features = self.get_lengths_gnn_som("O=O")
+
+        data_list = []
+        
+        for (mol, som_list) in zip(self.mols, som_list):
+            # get feature dimensions
+            num_nodes = mol.GetNumAtoms()
+            num_edges = 2*mol.GetNumBonds()
+            # som = som_list[:num_nodes]
+            # som_list = som_list[num_nodes:]
+            som = [[i] for i in som_list]
+            assert len(som) == num_nodes, 'not equal lengths'
+            #molecular_features = self.get_molecular_features(smiles)
+
+            
+            
+            # construct node feature matrix X of shape (n_nodes, n_node_features)
+            node_feature = np.zeros((num_nodes, num_node_features))
+
+            node_feature = self.combine_atom_features_gnn_som(mol, node_feature)
+            if node_feature is None:
+                dropped_molecules.append(Chem.MolToSmiles(mol))
+                continue
+            else:
+                node_feature = torch.tensor(node_feature, dtype = torch.float)
+            
+                # construct edge index array E of shape (2, n_edges)
+                (rows, cols) = np.nonzero(GetAdjacencyMatrix(mol))
+                torch_rows = torch.from_numpy(rows.astype(np.int64)).to(torch.long)
+                torch_cols = torch.from_numpy(cols.astype(np.int64)).to(torch.long)
+                edge = torch.stack([torch_rows, torch_cols], dim = 0)
+            
+                # construct edge feature array EF of shape (n_edges, n_edge_features)
+                edge_features = np.zeros((num_edges, num_edge_features))
+            
+                for (k, (i,j)) in enumerate(zip(rows, cols)):
+                    edge_features[k] = self.get_bond_features(mol.GetBondBetweenAtoms(int(i),int(j)))
+            
+                edge_features = torch.tensor(edge_features, dtype = torch.float)
+            
+                # construct label tensor
+                som_tensor = torch.tensor(np.array(som))
+            
+                # construct Pytorch Geometric data object and append to data list
+                data_list.append(Data(x = node_feature, edge_index = edge, edge_attr = edge_features, y = som_tensor))
+        return data_list, num_node_features, self.no_atoms, dropped_molecules
